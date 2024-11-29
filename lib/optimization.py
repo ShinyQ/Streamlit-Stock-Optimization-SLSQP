@@ -1,0 +1,107 @@
+from pulp import LpMaximize, LpProblem, LpVariable, lpSum, value
+from constant.stocks import TECH_STOCKS, OIL_GAS_STOCKS
+import plotly.graph_objects as go
+import pandas as pd
+import streamlit as st
+
+
+def linear_programming(
+    total_investment,
+    returns,
+    proportion,
+    tech_stocks,
+    non_tech_stocks,
+    oil_gas_stocks,
+):
+    st.subheader("Hasil Linear Programming")
+    st.dataframe(returns)
+    stocks = returns.keys()
+    selected_tech_stock = [stock for stock in TECH_STOCKS if stock in stocks]
+    selected_oil_gas_stock = [stock for stock in OIL_GAS_STOCKS if stock in stocks]
+
+    # Initialize Linear Programming Problem
+    model = LpProblem(name="portfolio_allocation", sense=LpMaximize)
+
+    # Define Decision Variables
+    allocation = {
+        asset: LpVariable(name=f"{asset}_allocation", lowBound=0, cat="Continuous")
+        for asset in returns.keys()
+    }
+
+    # Objective Function to Maximize Total Return
+    model += lpSum(allocation[asset] * returns[asset][-1] for asset in returns.keys())
+
+    # Constraints
+    if tech_stocks > 0:
+        model += (
+            lpSum(allocation[asset] for asset in selected_tech_stock)
+            == (tech_stocks / 100) * total_investment,
+            "Tech_Stock_Allocation_Constraint",
+        )
+
+    if non_tech_stocks > 0:
+        model += (
+            lpSum(
+                allocation[asset]
+                for asset in allocation
+                if asset not in selected_tech_stock
+            )
+            == (non_tech_stocks / 100) * total_investment,
+            "Non_Tech_Stock_Allocation_Constraint",
+        )
+
+    # 3. Specific Oil & Gas Stock Constraints
+    if oil_gas_stocks > 0:
+        model += (
+            lpSum(allocation[asset] for asset in selected_oil_gas_stock)
+            <= (oil_gas_stocks / 100) * total_investment,
+            "Oil_Gas_Stock_Allocation_Constraint",
+        )
+
+    if proportion > 0:
+        for asset in returns.keys():
+            model += (
+                allocation[asset] >= (proportion / 100) * total_investment,
+                f"{asset}_Min_Constraint",
+            )
+
+    # Ensure Total Investment Sum Constraint
+    model += (
+        lpSum(allocation.values()) == total_investment,
+        "Total_Investment_Constraint",
+    )
+
+    model.solve()
+
+    st.write(f'Total prediksi return bulanan: ${round(value(model.objective) / 100, 2)}', )
+    assets = list(returns.keys())
+
+    # List of allocations
+    allocation_values = [allocation[asset].varValue for asset in assets]
+    
+    # Prepare the data for the table
+    allocation_df = pd.DataFrame({
+        "Asset": assets,
+        "Jumlah Alokasi ($)": allocation_values
+    })
+
+    # Show the table using st.table
+    st.table(allocation_df)
+    
+    # Create a bar chart
+    fig = go.Figure(data=[go.Bar(
+        x=assets,  # asset names
+        y=allocation_values,  # allocation values
+        text=allocation_values,  # display values on bars
+        textposition='auto'  # position the text
+    )])
+
+    # Add title and labels
+    fig.update_layout(
+        margin=dict(t=5, b=10, l=0, r=0),
+        xaxis_title="Saham",
+        yaxis_title="Allocation Value",
+        template="plotly_dark"  # Optional: change theme to dark
+    )
+
+    st.plotly_chart(fig)

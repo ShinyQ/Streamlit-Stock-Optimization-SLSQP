@@ -2,14 +2,14 @@ import yfinance as yf
 import pandas as pd
 # https://colab.research.google.com/drive/1w3JxGK8bsRZNM37iH0XUpw8kkfI-uQP-?usp=sharing
 
-stocks_column = ['Date', 'Name', 'Ticker', 'Close', 'Close Change %']
+stocks_column = ['Date', 'Name', 'Ticker', 'Volume', 'Close', 'Close Change %']
 
 def calculate_close_price_changes(df):
     df["Close Change %"] = df["Close"].pct_change() * 100
-    df["Close Change %"].fillna(0)
-    df["Close Change %"] = df["Close Change %"].round(2)
+    df["Close Change %"] = df["Close Change %"].fillna(0)
+    df["Close Change %"] = df["Close Change %"].round(3)
 
-    return df["Close Change %"]
+    return df["Close Change %"].to_list()
 
 
 def get_stocks_change_data(stocks, start_period, end_period):
@@ -32,13 +32,13 @@ def get_stocks_change_data(stocks, start_period, end_period):
     
     formatted_stocks = {}
         
-    for ticker, name in zip(stock_symbol, stock_name):    
+    for stock, ticker, name in zip(stocks, stock_symbol, stock_name):    
         resetted_index_df = data[ticker].reset_index()
         close_change = calculate_close_price_changes(resetted_index_df)
         
         # Adding for optimization
         # Example Result: { "AAPL": [1.12, 4.55, 6.55], "CHV": [2.12, 3.55, 7.55] }
-        formatted_stocks[ticker] = close_change
+        formatted_stocks[stock] = close_change
         
         resetted_index_df["Close Change %"] = close_change
         resetted_index_df["Ticker"] = ticker

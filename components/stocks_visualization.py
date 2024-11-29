@@ -14,14 +14,14 @@ def choosen_stocks(stocks):
     st.markdown(s)
 
 
-def visualize_stock_cumulative_percentage(df):
-    st.subheader("Persentase Perubahan Kumulatif Keseluruhan (%)")
+def visualize_stock_cumulative_percentage(df, start_date, end_date):
+    st.subheader(f'Insight Saham ({start_date} s/d {end_date})')
     
     df_sum = df.copy()
     df_sum.drop('Date', axis=1, inplace=True)
 
     # Group by Ticker and calculate the sum
-    result = df_sum.groupby('Name').sum()[['Close', 'Close Change %']]
+    result = df_sum.groupby('Name').sum()[['Volume', 'Close Change %']].sort_values(by='Close Change %', ascending=False)
     st.table(result)
     
     df["Date"] = pd.to_datetime(df["Date"])
@@ -51,7 +51,6 @@ def visualize_stock_cumulative_percentage(df):
         xaxis_title="Tahun",
         yaxis_title="Persentase Perubahan Kumulatif (%)",
         legend_title="Stocks",
-        xaxis_rangeslider_visible=False,
     )
 
     st.plotly_chart(fig, use_container_width=True)
