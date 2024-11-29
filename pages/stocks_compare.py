@@ -9,8 +9,9 @@ st.title("Optimasi Pemilihan Saham")
 st.write(
     """
     Optimisasi pemilihan saham menggunakan metode optimasi SQLSP. 
-    Aplikasi ini akan melakukan optimisasi alokasi terhadap 
-    saham-saham yang dipilih sesuai dengan modal awal.
+    Aplikasi ini akan mengoptimalkan alokasi portofolio investasi guna 
+    memaksimalkan keuntungan bulanan dengan tetap mematuhi 
+    batasan-batasan risiko dan strategi investasi.
 """
 )
 
@@ -22,18 +23,18 @@ with col1:
 with col2:
     end_date = st.date_input("Masukkan Tanggal Akhir:")
 
-stocks = st.multiselect("Pilih saham yang akan di optimisasikan:", SNP500)
+stocks = st.multiselect("Pilih saham yang akan di optimisasikan: (min 2)", SNP500)
 
 modal = st.number_input(
     "Masukkan Jumlah Uang Yang Ingin Diinvestasikan:", min_value=1000
 )
 
-if st.button("Optimisasi Alokasi Portofolio", type="primary"):
-
+if st.button("Optimisasi Alokasi", type="primary"):
     if not stocks or modal < 1000:
-        st.error("Semua Field Harus Dipilih Dan Diisi!")
+        st.error("Semua field harus diisi!")
+    elif len(stocks) < 2:
+        st.error("Minimal memilih dua saham!")
     else:
         stocks_formatted, df = get_stocks_change_data(stocks, start_date, end_date)
         choosen_stocks(stocks)
         visualize_stock_cumulative_percentage(df)
-        st.write(stocks_formatted, df)
