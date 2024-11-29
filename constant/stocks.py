@@ -1,8 +1,8 @@
 CHOOSEN_STOCKS = [
-    "COIN - Coinbase Global",
+    "MRNA - Moderna",
     "CVX - Chevron",
     "CAT - Caterpillar",
-    "DIS - Walt Disney",
+    "GOOGL - Alphabet A",
     "COP - ConocoPhillips",
     "MA - Mastercard"
 ]
