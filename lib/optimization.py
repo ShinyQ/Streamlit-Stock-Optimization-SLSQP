@@ -108,7 +108,7 @@ def linear_programming(
             template="plotly_dark"  # Optional: change theme to dark
         )
 
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, key='LP')
 
         return total_return
     else:
@@ -125,6 +125,8 @@ def slsqp_optimization(
 ):
     st.subheader("Hasil Optimisasi SLSQP")
     st.dataframe(returns)
+    
+    # Extract available stocks
     stocks = list(returns.keys())
     selected_tech_stock = [stock for stock in TECH_STOCKS if stock in stocks]
     selected_oil_gas_stock = [stock for stock in OIL_GAS_STOCKS if stock in stocks]
@@ -135,7 +137,7 @@ def slsqp_optimization(
 
     # Constraints
     constraints = []
-
+    
     # Total Investment Constraint
     constraints.append({
         'type': 'eq',
@@ -186,21 +188,20 @@ def slsqp_optimization(
         constraints=constraints
     )
 
-    if result.success:
-        allocation_values = result.x
-        total_return = -result.fun
-
-        # Perbaikan di sini: pastikan round diterapkan dengan benar
+    allocation_values = result.x
+    total_return = -result.fun
+    
+    # Show the table using st.table
+    allocation_df = pd.DataFrame({
+        "Asset": stocks,
+        "Jumlah Alokasi ($)": allocation_values
+    })
+    
+    st.table(allocation_df)
+    
+    if result.fun < 0:
+         # Perbaikan di sini: pastikan round diterapkan dengan benar
         st.write(f'Total prediksi return bulanan: ${round(total_return / 100, 2)}')
-
-        # Prepare the data for the table
-        allocation_df = pd.DataFrame({
-            "Asset": stocks,
-            "Jumlah Alokasi ($)": allocation_values
-        })
-
-        # Show the table using st.table
-        st.table(allocation_df)
         
         # Create a bar chart
         fig = go.Figure(data=[go.Bar(
@@ -218,7 +219,7 @@ def slsqp_optimization(
             template="plotly_dark"  # Optional: change theme to dark
         )
 
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, key='SLSQP')
 
         return total_return
     else:
