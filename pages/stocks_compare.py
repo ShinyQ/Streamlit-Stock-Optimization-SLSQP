@@ -3,14 +3,13 @@ import pandas as pd
 
 from constant.stocks import SNP500, CHOOSEN_STOCKS
 from lib.stocks import get_stocks_change_data
-from lib.optimization import linear_programming
+from lib.optimization import linear_programming, slsqp_optimization
 from components.stocks_visualization import choosen_stocks, visualize_stock_cumulative_percentage
-
 
 st.title("Optimasi Alokasi Saham Investasi")
 st.write(
     """
-    Optimisasi pemilihan saham menggunakan metode optimasi SQLSP. 
+    Optimisasi pemilihan saham menggunakan metode optimasi SLSQP. 
     Aplikasi ini akan mengoptimalkan alokasi portofolio investasi guna 
     memaksimalkan keuntungan bulanan dengan tetap mematuhi 
     batasan-batasan risiko dan strategi investasi.
@@ -77,11 +76,43 @@ if st.button("Optimisasi Alokasi", type="primary"):
         
         st.divider()
         
-        linear_programming(
-            allocation, 
-            stocks_formatted, 
-            proportion, 
-            tech_stock, 
-            non_tech_stock, 
-            oil_gas_stock
-        )
+        # Menjalankan Kedua Metode dan Menyimpan Hasil Return
+        tab1, tab2 = st.tabs(["Linear Programming", "SLSQP Optimization"])
+        
+        with tab1:
+            total_return_lp = linear_programming(
+                allocation, 
+                stocks_formatted, 
+                proportion, 
+                tech_stock, 
+                non_tech_stock, 
+                oil_gas_stock
+            )
+        
+        with tab2:
+            total_return_slsqp = slsqp_optimization(
+                allocation, 
+                stocks_formatted, 
+                proportion, 
+                tech_stock, 
+                non_tech_stock, 
+                oil_gas_stock
+            )
+        
+        # Menampilkan Perbandingan Total Return
+        st.divider()
+        st.subheader("Perbandingan Total Return")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if total_return_lp is not None:
+                st.metric("Linear Programming Return", f"${round(total_return_lp / 100, 2)}")
+            else:
+                st.metric("Linear Programming Return", "Gagal")
+
+        with col2:
+            if total_return_slsqp is not None:
+                st.metric("SLSQP Optimization Return", f"${round(total_return_slsqp / 100, 2)}")
+            else:
+                st.metric("SLSQP Optimization Return", "Gagal")
